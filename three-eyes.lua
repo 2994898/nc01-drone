@@ -122,7 +122,7 @@ function fadePerspective()
 end
 
 function evolve()
-  voiceFade_counter = metro.init(addVoice, 0.1, 1)
+  local voiceFade_counter = metro.init(addVoice, 0.1, 1)
 
   if #voices == 6 then
     removeVoice()

@@ -101,8 +101,10 @@ function fadePerspective()
   perspectiveIndex = perspectiveIndex + 1
   if perspectiveIndex == 4 then perspectiveIndex = 1 end
 
-  local counter = metro.init(function(c) setVoiceProps(c, distances[perspectiveIndex], true) end, distances[perspectiveIndex] / 3, #voices)
-  counter:start()
+  if #voices ~= 0 then
+    local counter = metro.init(function(c) setVoiceProps(c, distances[perspectiveIndex], true) end, distances[perspectiveIndex] / 3, #voices)
+    counter:start()
+  end
 
   redraw()
 end

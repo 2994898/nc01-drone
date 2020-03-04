@@ -78,8 +78,8 @@ function addVoice()
 
   setVoiceProps(voiceIndex, 7)
 
-  table.insert(voices, #voices + 1)
-  end
+  table.insert(voices, voiceIndex)
+end
 
 function removeVoice(transitionTime)
   sc.level_slew_time(voices[1], transitionTime or 3)
@@ -139,7 +139,7 @@ function enc(n, d)
     volume = util.clamp(volume + d, 1, 100)
 
     for i = 1, #voices do
-      setVoiceProps(i, 0.01)
+      setVoiceProps(voices[i], 0.01)
     end
 
     redraw()

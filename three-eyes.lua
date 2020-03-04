@@ -56,7 +56,6 @@ function setVoiceProps(index, transitionTime, shouldRateTransition)
   sc.post_filter_fc(index, 10000 * presence)
   sc.post_filter_rq(index, 2 * presence)
   sc.post_filter_bp(index, 1 - presence)
-  sc.play(index, 1)
   sc.level(index, util.linexp(1, 100, 0.001, presence, volume))
 end
 
@@ -75,6 +74,7 @@ function addVoice()
   sc.loop_start(voiceIndex, voiceLoopPoints[voiceIndex][1])
   sc.loop_end(voiceIndex, voiceLoopPoints[voiceIndex][2])
   sc.position(voiceIndex, voiceLoopPoints[voiceIndex][1])
+  sc.play(voiceIndex, 1)
 
   setVoiceProps(voiceIndex, 7)
 
@@ -82,9 +82,21 @@ function addVoice()
 end
 
 function removeVoice(transitionTime)
+  if #voices == 0 then return end
+
   sc.level_slew_time(voices[1], transitionTime or 3)
   sc.level(voices[1], 0)
-  table.remove(voices, 1)
+
+  local counter = metro.init(function()
+    if #voices == 0 then
+      -- better to do with throttle removeVoice tho, this is cheap enough to call even if it's redundant
+      return
+    end
+
+    sc.play(voices[1], 0)
+    table.remove(voices, 1)
+  end, transitionTime or 3, 1)
+  counter:start()
 end
 
 -- k2_counter: to detect key press / long press

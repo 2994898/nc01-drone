@@ -33,6 +33,12 @@ local volume = 80
 local brightness = 50
 local density = 80
 
+function freeCounter(id)
+  if id ~= 0 and metro.assigned[id] then
+    metro.free(id)
+  end
+end
+
 function setVoiceProps(index, transitionTime, shouldRateTransition)
   presence = perspectives[perspectiveIndex][index]
 
@@ -87,6 +93,7 @@ function removeVoice(transitionTime)
   sc.level_slew_time(voices[1], transitionTime or 3)
   sc.level(voices[1], 0)
 
+  local counterId = 0
   local counter = metro.init(function()
     if #voices == 0 then
       -- better to do with throttle removeVoice tho, this is cheap enough to call even if it's redundant
@@ -95,7 +102,10 @@ function removeVoice(transitionTime)
 
     sc.play(voices[1], 0)
     table.remove(voices, 1)
+    freeCounter(counterId)
   end, transitionTime or 3, 1)
+
+  counterId = counter.props.id
   counter:start()
 end
 
@@ -114,7 +124,14 @@ function fadePerspective()
   if perspectiveIndex == 4 then perspectiveIndex = 1 end
 
   if #voices ~= 0 then
-    local counter = metro.init(function(c) setVoiceProps(c, distances[perspectiveIndex], true) end, distances[perspectiveIndex] / 3, #voices)
+    local counterId = 0
+    local counter = metro.init(function(c)
+      setVoiceProps(c, distances[perspectiveIndex], true)
+
+      if c == #voices then freeCounter(counterId) end
+    end, distances[perspectiveIndex] / 3, #voices)
+
+    counterId = counter.props.id
     counter:start()
   end
 
@@ -122,14 +139,19 @@ function fadePerspective()
 end
 
 function evolve()
-  local voiceFade_counter = metro.init(addVoice, 0.1, 1)
+  local counterId = 0
+  local counter = metro.init(function()
+    addVoice()
+    freeCounter(counterId)
+  end, 0.1, 1)
 
   if #voices == 6 then
     removeVoice()
-    voiceFade_counter.time = 3
+    counter.time = 3
   end
 
-  voiceFade_counter:start()
+  counterId = counter.props.id
+  counter:start()
 end
 
 function key(n, z)
